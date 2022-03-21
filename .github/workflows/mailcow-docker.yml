@@ -201,10 +201,6 @@ jobs:
 #         with:
 #           context: ./mailcow-git/data/Dockerfiles/dovecot
 #           file: ./mailcow/dovecot/Dockerfile
-          platforms: linux/arm64
-          push: true
-          tags: vimarsh244/mailcowarm64-dovecot:latest, vimarsh244/mailcowarm64-dovecot:build-${{ env.timestamp }}
-      
-
-      
-
+#           platforms: linux/arm64
+#           push: true
+#           tags: vimarsh244/mailcowarm64-dovecot:latest, vimarsh244/mailcowarm64-dovecot:build-${{ env.timestamp }}
