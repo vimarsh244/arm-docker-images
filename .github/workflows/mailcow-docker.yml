@@ -82,7 +82,7 @@ jobs:
           file: ./mailcow-git/data/Dockerfiles/dockerapi/Dockerfile
           platforms: linux/arm64/v8
           push: true
-          tags: quay.io/mailcowarm64/dockerapi:latest, quay.io/mailcowarm64/dockerapi:build-${{ env.timestamp }}
+          tags: vimarsh244/mailcowarm64-dockerapi:latest, vimarsh244/mailcowarm64-dockerapi:build-${{ env.timestamp }}
 
       - name: Build and push netfilter
         if: steps.cache.outputs.cache-hit != 'true'
@@ -93,7 +93,7 @@ jobs:
           file: ./mailcow-git/data/Dockerfiles/netfilter/Dockerfile
           platforms: linux/arm64/v8
           push: true
-          tags: quay.io/mailcowarm64/netfilter:latest, quay.io/mailcowarm64/netfilter:build-${{ env.timestamp }}
+          tags: vimarsh244/mailcowarm64-netfilter:latest, vimarsh244/mailcowarm64-netfilter:build-${{ env.timestamp }}
       
       - name: Build and push olefy
         if: steps.cache.outputs.cache-hit != 'true'
@@ -104,7 +104,7 @@ jobs:
           file: ./mailcow-git/data/Dockerfiles/olefy/Dockerfile
           platforms: linux/arm64/v8
           push: true
-          tags: quay.io/mailcowarm64/olefy:latest, quay.io/mailcowarm64/olefy:build-${{ env.timestamp }}
+          tags: vimarsh244/mailcowarm64-olefy:latest, vimarsh244/mailcowarm64-olefy:build-${{ env.timestamp }}
 
       - name: Build and push phpfpm
         if: steps.cache.outputs.cache-hit != 'true'
@@ -115,7 +115,7 @@ jobs:
           file: ./mailcow-phpfpm/Dockerfile
           platforms: linux/arm64/v8
           push: true
-          tags: quay.io/mailcowarm64/phpfpm:latest, quay.io/mailcowarm64/phpfpm:build-${{ env.timestamp }}
+          tags: vimarsh244/mailcowarm64-phpfpm:latest, vimarsh244/mailcowarm64-phpfpm:build-${{ env.timestamp }}
 
       - name: Build and push postfix
         if: steps.cache.outputs.cache-hit != 'true'
@@ -126,7 +126,7 @@ jobs:
           file: ./mailcow-git/data/Dockerfiles/postfix/Dockerfile
           platforms: linux/arm64/v8
           push: true
-          tags: quay.io/mailcowarm64/postfix:latest, quay.io/mailcowarm64/postfix:build-${{ env.timestamp }}
+          tags: vimarsh244/mailcowarm64-postfix:latest, vimarsh244/mailcowarm64-postfix:build-${{ env.timestamp }}
 
       - name: Build and push solr
         if: steps.cache.outputs.cache-hit != 'true'
@@ -137,7 +137,7 @@ jobs:
           file: ./mailcow-git/data/Dockerfiles/solr/Dockerfile
           platforms: linux/arm64/v8
           push: true
-          tags: quay.io/mailcowarm64/solr:latest, quay.io/mailcowarm64/solr:build-${{ env.timestamp }}
+          tags: vimarsh244/mailcowarm64-solr:latest, vimarsh244/mailcowarm64-solr:build-${{ env.timestamp }}
 
       - name: Build and push unbound
         if: steps.cache.outputs.cache-hit != 'true'
@@ -148,7 +148,7 @@ jobs:
           file: ./mailcow-git/data/Dockerfiles/unbound/Dockerfile
           platforms: linux/arm64/v8
           push: true
-          tags: quay.io/mailcowarm64/unbound:latest, quay.io/mailcowarm64/unbound:build-${{ env.timestamp }}
+          tags: vimarsh244/mailcowarm64-unbound:latest, vimarsh244/mailcowarm64-unbound:build-${{ env.timestamp }}
 
       - name: Build and push watchdog
         if: steps.cache.outputs.cache-hit != 'true'
@@ -159,4 +159,48 @@ jobs:
           file: ./mailcow-git/data/Dockerfiles/watchdog/Dockerfile
           platforms: linux/arm64/v8
           push: true
-          tags: quay.io/mailcowarm64/watchdog:latest, quay.io/mailcowarm64/watchdog:build-${{ env.timestamp }}
+          tags: vimarsh244/mailcowarm64-watchdog:latest, vimarsh244/mailcowarm64-watchdog:build-${{ env.timestamp }}
+          
+      - name: Build and push clamd
+        if: steps.cache.outputs.cache-hit != 'true'
+        id: docker_build_clamd
+        uses: docker/build-push-action@v2
+        with:
+          context: ./mailcow-git/data/Dockerfiles/clamd
+          file: ./mailcow-git/data/Dockerfiles/clamd/Dockerfile
+          platforms: linux/arm64/v8
+          push: true
+          tags: vimarsh244/mailcowarm64-clamd:latest, vimarsh244/mailcowarm64-clamd:build-${{ env.timestamp }}
+          
+      - name: Build and push dovecot
+        if: steps.cache.outputs.cache-hit != 'true'
+        id: docker_build_dovecot
+        uses: docker/build-push-action@v2
+        with:
+          context: ./mailcow-git/data/Dockerfiles/dovecot
+          file: ./mailcow-git/data/Dockerfiles/dovecot/Dockerfile
+          platforms: linux/arm64/v8
+          push: true
+          tags: vimarsh244/mailcowarm64-dovecot:latest, vimarsh244/mailcowarm64-dovecot:build-${{ env.timestamp }}
+      
+      - name: Build and push rspamd
+        if: steps.cache.outputs.cache-hit != 'true'
+        id: docker_build_rspamd
+        uses: docker/build-push-action@v2
+        with:
+          context: ./mailcow-git/data/Dockerfiles/rspamd
+          file: ./mailcow-git/data/Dockerfiles/rspamd/Dockerfile
+          platforms: linux/arm64/v8
+          push: true
+          tags: vimarsh244/mailcowarm64-rspamd:latest, vimarsh244/mailcowarm64-rspamd:build-${{ env.timestamp }}
+      
+      - name: Build and push sogo
+        if: steps.cache.outputs.cache-hit != 'true'
+        id: docker_build_sogo
+        uses: docker/build-push-action@v2
+        with:
+          context: ./mailcow-git/data/Dockerfiles/sogo
+          file: ./mailcow-git/data/Dockerfiles/sogo/Dockerfile
+          platforms: linux/arm64/v8
+          push: true
+          tags: vimarsh244/mailcowarm64-sogo:latest, vimarsh244/mailcowarm64-sogo:build-${{ env.timestamp }}
