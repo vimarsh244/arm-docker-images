@@ -178,7 +178,7 @@ jobs:
         uses: docker/build-push-action@v2
         with:
           context: ./mailcow-git/data/Dockerfiles/sogo
-          file: ./mailcow-git/data/Dockerfiles/sogo/Dockerfile
+          file: ./mailcow/sogo/Dockerfile
           platforms: linux/arm64/v8
           push: true
           tags: vimarsh244/mailcowarm64-sogo:latest, vimarsh244/mailcowarm64-sogo:build-${{ env.timestamp }}
@@ -200,7 +200,7 @@ jobs:
         uses: docker/build-push-action@v2
         with:
           context: ./mailcow-git/data/Dockerfiles/dovecot
-          file: ./mailcow-git/data/Dockerfiles/dovecot/Dockerfile
+          file: ./mailcow/dovecot/Dockerfile
           platforms: linux/arm64/v8
           push: true
           tags: vimarsh244/mailcowarm64-dovecot:latest, vimarsh244/mailcowarm64-dovecot:build-${{ env.timestamp }}
