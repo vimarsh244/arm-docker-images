@@ -161,46 +161,46 @@ jobs:
 #           push: true
 #           tags: vimarsh244/mailcowarm64-watchdog:latest, vimarsh244/mailcowarm64-watchdog:build-${{ env.timestamp }}
           
-      - name: Build and push clamd
-        if: steps.cache.outputs.cache-hit != 'true'
-        id: docker_build_clamd
-        uses: docker/build-push-action@v2
-        with:
-          context: ./mailcow-git/data/Dockerfiles/clamd
-          file: ./mailcow/clamd/Dockerfile
-          platforms: linux/arm64
-          push: true
-          tags: vimarsh244/mailcowarm64-clamd:latest, vimarsh244/mailcowarm64-clamd:build-${{ env.timestamp }}
-          
-#       - name: Build and push sogo
+#       - name: Build and push clamd
 #         if: steps.cache.outputs.cache-hit != 'true'
-#         id: docker_build_sogo
+#         id: docker_build_clamd
 #         uses: docker/build-push-action@v2
 #         with:
-#           context: ./mailcow-git/data/Dockerfiles/sogo
-#           file: ./mailcow/sogo/Dockerfile
+#           context: ./mailcow-git/data/Dockerfiles/clamd
+#           file: ./mailcow/clamd/Dockerfile
 #           platforms: linux/arm64
 #           push: true
-#           tags: vimarsh244/mailcowarm64-sogo:latest, vimarsh244/mailcowarm64-sogo:build-${{ env.timestamp }}
-
-      - name: Build and push rspamd
+#           tags: vimarsh244/mailcowarm64-clamd:latest, vimarsh244/mailcowarm64-clamd:build-${{ env.timestamp }}
+          
+      - name: Build and push sogo
         if: steps.cache.outputs.cache-hit != 'true'
-        id: docker_build_rspamd
+        id: docker_build_sogo
         uses: docker/build-push-action@v2
         with:
-          context: ./mailcow-git/data/Dockerfiles/rspamd
-          file: ./mailcow-git/data/Dockerfiles/rspamd/Dockerfile
+          context: ./mailcow-git/data/Dockerfiles/sogo
+          file: ./mailcow/sogo/Dockerfile
           platforms: linux/arm64
           push: true
-          tags: vimarsh244/mailcowarm64-rspamd:latest, vimarsh244/mailcowarm64-rspamd:build-${{ env.timestamp }}
+          tags: vimarsh244/mailcowarm64-sogo:latest, vimarsh244/mailcowarm64-sogo:build-${{ env.timestamp }}
 
-      - name: Build and push dovecot
-        if: steps.cache.outputs.cache-hit != 'true'
-        id: docker_build_dovecot
-        uses: docker/build-push-action@v2
-        with:
-          context: ./mailcow-git/data/Dockerfiles/dovecot
-          file: ./mailcow/dovecot/Dockerfile
+#       - name: Build and push rspamd
+#         if: steps.cache.outputs.cache-hit != 'true'
+#         id: docker_build_rspamd
+#         uses: docker/build-push-action@v2
+#         with:
+#           context: ./mailcow-git/data/Dockerfiles/rspamd
+#           file: ./mailcow-git/data/Dockerfiles/rspamd/Dockerfile
+#           platforms: linux/arm64
+#           push: true
+#           tags: vimarsh244/mailcowarm64-rspamd:latest, vimarsh244/mailcowarm64-rspamd:build-${{ env.timestamp }}
+
+#       - name: Build and push dovecot
+#         if: steps.cache.outputs.cache-hit != 'true'
+#         id: docker_build_dovecot
+#         uses: docker/build-push-action@v2
+#         with:
+#           context: ./mailcow-git/data/Dockerfiles/dovecot
+#           file: ./mailcow/dovecot/Dockerfile
           platforms: linux/arm64
           push: true
           tags: vimarsh244/mailcowarm64-dovecot:latest, vimarsh244/mailcowarm64-dovecot:build-${{ env.timestamp }}
