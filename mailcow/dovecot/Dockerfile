@@ -92,7 +92,7 @@ RUN groupadd -g 5000 vmail \
   && echo "deb https://repo.dovecot.org/ce-${DOVECOT}/debian/bullseye bullseye main" > /etc/apt/sources.list.d/dovecot.list \
   && apt-get update \
   && apt-get -y --no-install-recommends install \
-  dovecot-lua \
+  dovecot-auth-lua \
   dovecot-managesieved \
   dovecot-sieve \
   dovecot-lmtpd \
