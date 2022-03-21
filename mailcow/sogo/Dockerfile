@@ -1,4 +1,4 @@
-FROM debian:bullseye-slim
+FROM ubuntu:bionic
 
 ARG DEBIAN_FRONTEND=noninteractive
 ARG SOGO_DEBIAN_REPOSITORY=http://packages.inverse.ca/SOGo/nightly/5/ubuntu/
