@@ -29,7 +29,7 @@ jobs:
 
       - name: Set up QEMU
         uses: docker/setup-qemu-action@v1
-        if: steps.cache.outputs.cache-hit != 'true'
+#         if: steps.cache.outputs.cache-hit != 'true'
         with:
           platforms: arm64
 
@@ -38,28 +38,28 @@ jobs:
           
       - name: Check Out Repo mailcow/mailcow-dockerized
         uses: actions/checkout@v2
-        if: steps.cache.outputs.cache-hit != 'true'
+#         if: steps.cache.outputs.cache-hit != 'true'
         with:
           repository: "mailcow/mailcow-dockerized"
           ref: 'master'
           path: 'mailcow-git'
       
       - name: Login to docker hub
-        if: steps.cache.outputs.cache-hit != 'true'
+#         if: steps.cache.outputs.cache-hit != 'true'
         uses: docker/login-action@v1
         with:
           username: ${{ secrets.DOCKER_USERNAME }}
           password: ${{ secrets.DOCKER_PASSWORD }}
 
       - name: Set up Docker Buildx
-        if: steps.cache.outputs.cache-hit != 'true'
+#         if: steps.cache.outputs.cache-hit != 'true'
         id: buildx
         uses: docker/setup-buildx-action@v1
         with:
           version: latest
 
       - name: Set up build timestamp
-        if: steps.cache.outputs.cache-hit != 'true'
+#         if: steps.cache.outputs.cache-hit != 'true'
         run: echo "timestamp=$(date +%Y%m%d)" >> $GITHUB_ENV
 
       - name: Build and push dovecot
