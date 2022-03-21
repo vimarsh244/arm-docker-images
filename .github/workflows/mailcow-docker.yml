@@ -98,7 +98,6 @@ jobs:
           tags: vimarsh244/mailcowarm64-netfilter:latest, vimarsh244/mailcowarm64-netfilter:build-${{ env.timestamp }}
       
       - name: Build and push olefy
-        if: steps.cache.outputs.cache-hit != 'true'
         id: docker_build_olefy
         uses: docker/build-push-action@v2
         with:
