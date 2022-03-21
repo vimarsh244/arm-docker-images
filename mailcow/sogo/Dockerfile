@@ -24,8 +24,10 @@ RUN echo "Building from repository $SOGO_DEBIAN_REPOSITORY" \
   psmisc \
   wget \
   patch \
-  && dpkgArch="$(dpkg --print-architecture | awk -F- '{ print $NF }')" \
-  && wget -O /usr/local/bin/gosu "https://github.com/tianon/gosu/releases/download/$GOSU_VERSION/gosu-arm64" \
+  && dpkgArch="$(dpkg --print-architecture | awk -F- '{ print $NF }')"
+  
+  
+RUN wget -O /usr/local/bin/gosu "https://github.com/tianon/gosu/releases/download/$GOSU_VERSION/gosu-arm64" \
   && chmod +x /usr/local/bin/gosu \
   && gosu nobody true \
   && mkdir /usr/share/doc/sogo \
