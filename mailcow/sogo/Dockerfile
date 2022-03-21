@@ -36,7 +36,7 @@ RUN wget -O /usr/local/bin/gosu "https://github.com/tianon/gosu/releases/downloa
   && echo "deb ${SOGO_DEBIAN_REPOSITORY} bullseye bullseye" > /etc/apt/sources.list.d/sogo.list \
   && apt-get update && apt-get install -y --no-install-recommends \
     sogo \
-    sogo-activesync \
+#     sogo-activesync \
   && apt-get autoclean \
   && rm -rf /var/lib/apt/lists/* /etc/apt/sources.list.d/sogo.list \
   && touch /etc/default/locale
