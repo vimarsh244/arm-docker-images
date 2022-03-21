@@ -1,0 +1,68 @@
+name: Docker build clickhouse server image
+
+on:
+  schedule:
+    - cron: "0 0 * * 0"
+  push:
+    branches:
+      - master
+  workflow_dispatch:
+  
+jobs:
+
+  build:
+
+    runs-on: ubuntu-latest
+
+    steps:      
+      - name: Get latest commit hash
+        id: get-latest-commit
+        run: |
+          echo "::set-output name=commit::$(git ls-remote git://github.com/mailcow/mailcow-dockerized.git | head -n1 | awk '{print $1;}')"
+        shell: bash
+
+      - uses: actions/cache@v2
+        id: cache
+        with:
+          path: mailcow
+          key: ${{ runner.os }}-v1-${{ steps.get-latest-commit.outputs.commit }}-${{ hashFiles('**/lockfiles') }}
+
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v1
+        with:
+          platforms: arm64
+
+      - name: Check Out Repo
+        uses: actions/checkout@v2
+          
+      - name: Check Out Repo ClickHouse/ClickHouse
+        uses: actions/checkout@v2
+        with:
+          repository: "ClickHouse/ClickHouse"
+          ref: 'master'
+          path: 'clickhouse-git'
+      
+      - name: Login to docker hub
+        uses: docker/login-action@v1
+        with:
+          username: ${{ secrets.DOCKER_USERNAME }}
+          password: ${{ secrets.DOCKER_PASSWORD }}
+
+      - name: Set up Docker Buildx
+        id: buildx
+        uses: docker/setup-buildx-action@v1
+        with:
+          version: latest
+
+      - name: Set up build timestamp
+        run: echo "timestamp=$(date +%Y%m%d)" >> $GITHUB_ENV
+
+      - name: Build and push clickhouse server
+        id: docker_build_clichouse-server
+        uses: docker/build-push-action@v2
+        with:
+          context: ./clickhouse-git/docker/server
+          file: ./clickhouse-git/docker/server/Dockerfile
+          platforms: linux/arm64
+          push: true
+          tags: vimarsh244/arm-clickhouse-server:latest, vimarsh244/arm-clickhouse-server:build-${{ env.timestamp }}
