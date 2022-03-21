@@ -1,0 +1,161 @@
+name: Docker build mailcow images
+
+on:
+  schedule:
+    - cron: "0 0 * * 0"
+  push:
+    branches:
+      - master
+
+jobs:
+
+  build:
+
+    runs-on: ubuntu-latest
+
+    steps:      
+      - name: Get latest commit hash
+        id: get-latest-commit
+        run: |
+          echo "::set-output name=commit::$(git ls-remote git://github.com/mailcow/mailcow-dockerized.git | head -n1 | awk '{print $1;}')"
+        shell: bash
+
+      - uses: actions/cache@v2
+        id: cache
+        with:
+          path: mailcow
+          key: ${{ runner.os }}-v1-${{ steps.get-latest-commit.outputs.commit }}-${{ hashFiles('**/lockfiles') }}
+
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v1
+        if: steps.cache.outputs.cache-hit != 'true'
+        with:
+          platforms: arm64
+
+      - name: Check Out Repo
+        uses: actions/checkout@v2
+          
+      - name: Check Out Repo mailcow/mailcow-dockerized
+        uses: actions/checkout@v2
+        if: steps.cache.outputs.cache-hit != 'true'
+        with:
+          repository: "mailcow/mailcow-dockerized"
+          ref: 'master'
+          path: 'mailcow-git'
+      
+      - name: Login to docker hub
+        if: steps.cache.outputs.cache-hit != 'true'
+        uses: docker/login-action@v1
+        with:
+          username: ${{ secrets.DOCKER_USERNAME }}
+          password: ${{ secrets.DOCKER_PASSWORD }}
+
+      - name: Set up Docker Buildx
+        if: steps.cache.outputs.cache-hit != 'true'
+        id: buildx
+        uses: docker/setup-buildx-action@v1
+        with:
+          version: latest
+
+      - name: Set up build timestamp
+        if: steps.cache.outputs.cache-hit != 'true'
+        run: echo "timestamp=$(date +%Y%m%d)" >> $GITHUB_ENV
+
+      - name: Build and push acme
+        if: steps.cache.outputs.cache-hit != 'true'
+        id: docker_build_new_custom
+        uses: docker/build-push-action@v2
+        with:
+          context: ./mailcow-git/data/Dockerfiles/acme
+          file: ./mailcow-git/data/Dockerfiles/acme/Dockerfile
+          platforms: linux/arm64/v8
+          push: true
+          tags: vimarsh244/mailcowarm64/acme:latest, vimarsh244/mailcowarm64/acme:build-${{ env.timestamp }}
+
+      - name: Build and push dockerapi
+        if: steps.cache.outputs.cache-hit != 'true'
+        id: docker_build_dockerapi
+        uses: docker/build-push-action@v2
+        with:
+          context: ./mailcow-git/data/Dockerfiles/dockerapi
+          file: ./mailcow-git/data/Dockerfiles/dockerapi/Dockerfile
+          platforms: linux/arm64/v8
+          push: true
+          tags: quay.io/mailcowarm64/dockerapi:latest, quay.io/mailcowarm64/dockerapi:build-${{ env.timestamp }}
+
+      - name: Build and push netfilter
+        if: steps.cache.outputs.cache-hit != 'true'
+        id: docker_build_netfilter
+        uses: docker/build-push-action@v2
+        with:
+          context: ./mailcow-git/data/Dockerfiles/netfilter
+          file: ./mailcow-git/data/Dockerfiles/netfilter/Dockerfile
+          platforms: linux/arm64/v8
+          push: true
+          tags: quay.io/mailcowarm64/netfilter:latest, quay.io/mailcowarm64/netfilter:build-${{ env.timestamp }}
+      
+      - name: Build and push olefy
+        if: steps.cache.outputs.cache-hit != 'true'
+        id: docker_build_olefy
+        uses: docker/build-push-action@v2
+        with:
+          context: ./mailcow-git/data/Dockerfiles/olefy
+          file: ./mailcow-git/data/Dockerfiles/olefy/Dockerfile
+          platforms: linux/arm64/v8
+          push: true
+          tags: quay.io/mailcowarm64/olefy:latest, quay.io/mailcowarm64/olefy:build-${{ env.timestamp }}
+
+      - name: Build and push phpfpm
+        if: steps.cache.outputs.cache-hit != 'true'
+        id: docker_build_phpfpm
+        uses: docker/build-push-action@v2
+        with:
+          context: ./mailcow-git/data/Dockerfiles/phpfpm
+          file: ./mailcow-phpfpm/Dockerfile
+          platforms: linux/arm64/v8
+          push: true
+          tags: quay.io/mailcowarm64/phpfpm:latest, quay.io/mailcowarm64/phpfpm:build-${{ env.timestamp }}
+
+      - name: Build and push postfix
+        if: steps.cache.outputs.cache-hit != 'true'
+        id: docker_build_postfix
+        uses: docker/build-push-action@v2
+        with:
+          context: ./mailcow-git/data/Dockerfiles/postfix
+          file: ./mailcow-git/data/Dockerfiles/postfix/Dockerfile
+          platforms: linux/arm64/v8
+          push: true
+          tags: quay.io/mailcowarm64/postfix:latest, quay.io/mailcowarm64/postfix:build-${{ env.timestamp }}
+
+      - name: Build and push solr
+        if: steps.cache.outputs.cache-hit != 'true'
+        id: docker_build_solr
+        uses: docker/build-push-action@v2
+        with:
+          context: ./mailcow-git/data/Dockerfiles/solr
+          file: ./mailcow-git/data/Dockerfiles/solr/Dockerfile
+          platforms: linux/arm64/v8
+          push: true
+          tags: quay.io/mailcowarm64/solr:latest, quay.io/mailcowarm64/solr:build-${{ env.timestamp }}
+
+      - name: Build and push unbound
+        if: steps.cache.outputs.cache-hit != 'true'
+        id: docker_build_unbound
+        uses: docker/build-push-action@v2
+        with:
+          context: ./mailcow-git/data/Dockerfiles/unbound
+          file: ./mailcow-git/data/Dockerfiles/unbound/Dockerfile
+          platforms: linux/arm64/v8
+          push: true
+          tags: quay.io/mailcowarm64/unbound:latest, quay.io/mailcowarm64/unbound:build-${{ env.timestamp }}
+
+      - name: Build and push watchdog
+        if: steps.cache.outputs.cache-hit != 'true'
+        id: docker_build_watchdog
+        uses: docker/build-push-action@v2
+        with:
+          context: ./mailcow-git/data/Dockerfiles/watchdog
+          file: ./mailcow-git/data/Dockerfiles/watchdog/Dockerfile
+          platforms: linux/arm64/v8
+          push: true
+          tags: quay.io/mailcowarm64/watchdog:latest, quay.io/mailcowarm64/watchdog:build-${{ env.timestamp }}
