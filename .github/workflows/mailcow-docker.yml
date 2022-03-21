@@ -71,7 +71,7 @@ jobs:
           file: ./mailcow-git/data/Dockerfiles/acme/Dockerfile
           platforms: linux/arm64/v8
           push: true
-          tags: vimarsh244/mailcowarm64/acme:latest, vimarsh244/mailcowarm64/acme:build-${{ env.timestamp }}
+          tags: vimarsh244/mailcowarm64-acme:latest, vimarsh244/mailcowarm64-acme:build-${{ env.timestamp }}
 
       - name: Build and push dockerapi
         if: steps.cache.outputs.cache-hit != 'true'
