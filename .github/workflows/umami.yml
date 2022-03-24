@@ -39,7 +39,7 @@ jobs:
         uses: actions/checkout@v2
         with:
           repository: "tschannik/caprover-umami"
-          ref: 'master'
+          ref: 'main'
           path: 'caprover-umami-git'
       
       - name: Login to docker hub
