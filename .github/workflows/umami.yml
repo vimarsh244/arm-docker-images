@@ -18,7 +18,7 @@ jobs:
       - name: Get latest commit hash
         id: get-latest-commit
         run: |
-          echo "::set-output name=commit::$(git ls-remote git://github.com/mailcow/mailcow-dockerized.git | head -n1 | awk '{print $1;}')"
+          echo "::set-output name=commit::$(git ls-remote git://github.com/mikecao/umami.git | head -n1 | awk '{print $1;}')"
         shell: bash
 
       - uses: actions/cache@v2
@@ -35,12 +35,12 @@ jobs:
       - name: Check Out Repo
         uses: actions/checkout@v2
           
-      - name: Check Out Repo tschannik/caprover-umami
+      - name: Check Out Repo mikecao/umami
         uses: actions/checkout@v2
         with:
-          repository: "tschannik/caprover-umami"
+          repository: "mikecao/umami"
           ref: 'main'
-          path: 'caprover-umami-git'
+          path: 'umami-git'
       
       - name: Login to docker hub
         uses: docker/login-action@v1
@@ -61,8 +61,8 @@ jobs:
         id: docker_build_new_custom
         uses: docker/build-push-action@v2
         with:
-          context: ./caprover-umami-git/
-          file: ./caprover-umami-git/Dockerfile
+          context: ./umami-git/
+          file: ./umami-git/Dockerfile
           platforms: linux/arm64
           push: true
           tags: vimarsh244/arm-umami-analytics:latest, vimarsh244/arm-umami-analytics:build-${{ env.timestamp }}
