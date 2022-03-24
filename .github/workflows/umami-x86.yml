@@ -1,4 +1,4 @@
-name: Docker build umami.is ARM image
+name: Docker build umami.is image with new updates
 
 on:
   schedule:
@@ -27,20 +27,15 @@ jobs:
           path: umami
           key: ${{ runner.os }}-v1-${{ steps.get-latest-commit.outputs.commit }}-${{ hashFiles('**/lockfiles') }}
 
-      - name: Set up QEMU
-        uses: docker/setup-qemu-action@v1
-        with:
-          platforms: arm64
-
       - name: Check Out Repo
         uses: actions/checkout@v2
           
-      - name: Check Out Repo mikecao/umami
-        uses: actions/checkout@v2
-        with:
-          repository: "mikecao/umami"
-          ref: 'master'
-          path: 'umami-git'
+#       - name: Check Out Repo mikecao/umami
+#         uses: actions/checkout@v2
+#         with:
+#           repository: "mikecao/umami"
+#           ref: 'master'
+#           path: 'umami-git'
       
       - name: Login to docker hub
         uses: docker/login-action@v1
@@ -61,8 +56,8 @@ jobs:
         id: docker_build_new_custom
         uses: docker/build-push-action@v2
         with:
-          context: ./umami-git/
-          file: ./umami-git/Dockerfile
-          platforms: linux/arm64
+          context: ./umami-x86-caprover/
+          file: ./umami-x86-caprover/Dockerfile
+          platforms: linux/amd64
           push: true
-          tags: vimarsh244/arm-umami-analytics:latest, vimarsh244/arm-umami-analytics:build-${{ env.timestamp }}
+          tags: vimarsh244/umami-analytics:latest, vimarsh244/umami-analytics:build-${{ env.timestamp }}
