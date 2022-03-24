@@ -39,7 +39,7 @@ jobs:
         uses: actions/checkout@v2
         with:
           repository: "mikecao/umami"
-          ref: 'main'
+          ref: 'master'
           path: 'umami-git'
       
       - name: Login to docker hub
