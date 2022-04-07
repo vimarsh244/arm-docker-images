@@ -59,7 +59,7 @@ jobs:
       - name: Set up build timestamp
         run: echo "timestamp=$(date +%Y%m%d)" >> $GITHUB_ENV
 
-      - name: Build and push acme
+      - name: Build and push etherpad
         id: docker_build_new_custom
         uses: docker/build-push-action@v2
         with:
