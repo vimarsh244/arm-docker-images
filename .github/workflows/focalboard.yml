@@ -1,4 +1,5 @@
 # https://github.com/mattermost/focalboard (release-latest)
+# Now using vimarsh244/focalboard
 
 name: Docker build Focalboard ARM image
 
@@ -20,13 +21,13 @@ jobs:
       - name: Get latest commit hash
         id: get-latest-commit
         run: |
-          echo "::set-output name=commit::$(git ls-remote git://github.com/mattermost/focalboard.git | head -n1 | awk '{print $1;}')"
+          echo "::set-output name=commit::$(git ls-remote git://github.com/vimarsh244/focalboard.git | head -n1 | awk '{print $1;}')"
         shell: bash
 
       - uses: actions/cache@v2
         id: cache
         with:
-          path: etherpad
+          path: focalboard
           key: ${{ runner.os }}-v1-${{ steps.get-latest-commit.outputs.commit }}-${{ hashFiles('**/lockfiles') }}
 
       - name: Set up QEMU
@@ -37,10 +38,10 @@ jobs:
       - name: Check Out Repo
         uses: actions/checkout@v2
           
-      - name: Check Out Repo ether/etherpad-lite
+      - name: Check Out Repo vimarsh244/focalboard
         uses: actions/checkout@v2
         with:
-          repository: "mattermost/focalboard"
+          repository: "vimarsh244/focalboard"
           ref: 'release-latest'
           path: 'focalboard-git'
       
@@ -59,8 +60,8 @@ jobs:
       - name: Set up build timestamp
         run: echo "timestamp=$(date +%Y%m%d)" >> $GITHUB_ENV
 
-      - name: A jank method to replace amd64 with arm64 in makefile
-        run: sed -i 's~amd64~arm64~g' ./focalboard-git/Makefile
+#       - name: A jank method to replace amd64 with arm64 in makefile
+#         run: sed -i 's~amd64~arm64~g' ./focalboard-git/Makefile
 
       - name: Build and push focalboard
         id: docker_build_new_custom
