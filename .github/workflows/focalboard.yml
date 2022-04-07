@@ -59,6 +59,9 @@ jobs:
       - name: Set up build timestamp
         run: echo "timestamp=$(date +%Y%m%d)" >> $GITHUB_ENV
 
+      - name: A jank method to replace amd64 with arm64 in makefile
+        run: sed -i 's/amd64/arm64/g/' ./focalboard-git/Makefile
+
       - name: Build and push focalboard
         id: docker_build_new_custom
         uses: docker/build-push-action@v2
