@@ -1,7 +1,85 @@
-# https://github.com/mattermost/focalboard (release-latest)
-# Now using vimarsh244/focalboard
+# # https://github.com/mattermost/focalboard (release-latest)
+# # Now using vimarsh244/focalboard
 
-name: Docker build Focalboard ARM image
+# name: Docker build Focalboard ARM image
+
+# on:
+#   schedule:
+#     - cron: "0 0 * * 0"
+#   push:
+#     branches:
+#       - master
+#   workflow_dispatch:
+  
+# jobs:
+
+#   build:
+
+#     runs-on: ubuntu-latest
+
+#     steps:      
+#       - name: Get latest commit hash
+#         id: get-latest-commit
+#         run: |
+#           echo "::set-output name=commit::$(git ls-remote git://github.com/vimarsh244/focalboard.git | head -n1 | awk '{print $1;}')"
+#         shell: bash
+
+#       - uses: actions/cache@v2
+#         id: cache
+#         with:
+#           path: focalboard
+#           key: ${{ runner.os }}-v1-${{ steps.get-latest-commit.outputs.commit }}-${{ hashFiles('**/lockfiles') }}
+
+#       - name: Set up QEMU
+#         uses: docker/setup-qemu-action@v1
+#         with:
+#           platforms: arm64
+
+#       - name: Check Out Repo
+#         uses: actions/checkout@v2
+          
+#       - name: Check Out Repo vimarsh244/focalboard
+#         uses: actions/checkout@v2
+#         with:
+#           repository: "vimarsh244/focalboard"
+#           ref: 'release-latest'
+#           path: 'focalboard-git'
+      
+#       - name: Login to docker hub
+#         uses: docker/login-action@v1
+#         with:
+#           username: ${{ secrets.DOCKER_USERNAME }}
+#           password: ${{ secrets.DOCKER_PASSWORD }}
+
+#       - name: Set up Docker Buildx
+#         id: buildx
+#         uses: docker/setup-buildx-action@v1
+#         with:
+#           version: latest
+
+#       - name: Set up build timestamp
+#         run: echo "timestamp=$(date +%Y%m%d)" >> $GITHUB_ENV
+
+# #       - name: A jank method to replace amd64 with arm64 in makefile
+# #         run: sed -i 's~amd64~arm64~g' ./focalboard-git/Makefile
+
+#       - name: Build and push focalboard
+#         id: docker_build_new_custom
+#         uses: docker/build-push-action@v2
+#         with:
+#           context: ./focalboard-git/docker/
+#           file: ./focalboard-git/docker/Dockerfile
+#           platforms: linux/arm64
+#           push: true
+#           tags: vimarsh244/arm-focalboard:latest, vimarsh244/arm-focalboard:build-${{ env.timestamp }}
+          
+
+name: build docker for Focalboard
+
+env:
+  FOCALBOARD_MAJOR: 0
+  FOCALBOARD_MINOR: 6
+  FOCALBOARD_INCREMENT: 5
 
 on:
   schedule:
@@ -10,65 +88,55 @@ on:
     branches:
       - master
   workflow_dispatch:
-  
-jobs:
 
+jobs:
   build:
+
+    name: build
 
     runs-on: ubuntu-latest
 
-    steps:      
-      - name: Get latest commit hash
-        id: get-latest-commit
-        run: |
-          echo "::set-output name=commit::$(git ls-remote git://github.com/vimarsh244/focalboard.git | head -n1 | awk '{print $1;}')"
-        shell: bash
-
-      - uses: actions/cache@v2
-        id: cache
+    steps:
+      - name: Generate Docker image labels
+        uses: crazy-max/ghaction-docker-meta@v3.6.2
         with:
-          path: focalboard
-          key: ${{ runner.os }}-v1-${{ steps.get-latest-commit.outputs.commit }}-${{ hashFiles('**/lockfiles') }}
-
+          images: ${{ env.DOCKERHUB_REPO }}
+          label-custom: |
+            maintainer=vimarsh244
+            org.opencontainers.image.title=focalboard
+            org.opencontainers.image.description=Focalboard is an open source, self-hosted alternative to Trello, Notion, and Asana.
+            org.opencontainers.image.url=https://www.focalboard.com
+            org.opencontainers.image.licenses=Mattermost Licensing
+            
       - name: Set up QEMU
         uses: docker/setup-qemu-action@v1
-        with:
-          platforms: arm64
 
-      - name: Check Out Repo
-        uses: actions/checkout@v2
-          
-      - name: Check Out Repo vimarsh244/focalboard
-        uses: actions/checkout@v2
+      - id: focalboard
+        uses: pozetroninc/github-action-get-latest-release@master
         with:
-          repository: "vimarsh244/focalboard"
-          ref: 'release-latest'
-          path: 'focalboard-git'
-      
-      - name: Login to docker hub
+          repository: mattermost/focalboard
+          
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v1
+
+      - name: Login to DockerHub
+        if: github.event_name != 'pull_request'
         uses: docker/login-action@v1
         with:
-          username: ${{ secrets.DOCKER_USERNAME }}
-          password: ${{ secrets.DOCKER_PASSWORD }}
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
 
-      - name: Set up Docker Buildx
-        id: buildx
-        uses: docker/setup-buildx-action@v1
-        with:
-          version: latest
-
-      - name: Set up build timestamp
-        run: echo "timestamp=$(date +%Y%m%d)" >> $GITHUB_ENV
-
-#       - name: A jank method to replace amd64 with arm64 in makefile
-#         run: sed -i 's~amd64~arm64~g' ./focalboard-git/Makefile
-
-      - name: Build and push focalboard
-        id: docker_build_new_custom
+      - name: Build and push
         uses: docker/build-push-action@v2
         with:
-          context: ./focalboard-git/docker/
-          file: ./focalboard-git/docker/Dockerfile
-          platforms: linux/arm64
-          push: true
-          tags: vimarsh244/arm-focalboard:latest, vimarsh244/arm-focalboard:build-${{ env.timestamp }}
+          platforms: linux/amd64,linux/arm/v7,linux/arm64/v8
+          file: ./mattermost/focalboard//Dockerfile
+          pull: true
+          push: ${{ github.event_name != 'pull_request' }}
+#           build-args: FOCALBOARD_REF=v${{ env.FOCALBOARD_MAJOR }}.${{ env.FOCALBOARD_MINOR }}.${{ env.FOCALBOARD_INCREMENT }}
+
+          build-args: FOCALBOARD_REF=v${{ steps.focalboard.outputs.release }}
+          tags: |
+            ${{ env.DOCKERHUB_REPO }}:${{ steps.focalboard.outputs.release }}
+            ${{ env.DOCKERHUB_REPO }}:latest
+          labels: ${{ steps.docker_meta.outputs.labels }}
