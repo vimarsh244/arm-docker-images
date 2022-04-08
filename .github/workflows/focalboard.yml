@@ -46,9 +46,7 @@ jobs:
           file: ./mattermost/focalboard//Dockerfile
           pull: true
           push: ${{ github.event_name != 'pull_request' }}
-#           build-args: FOCALBOARD_REF=v${{ env.FOCALBOARD_MAJOR }}.${{ env.FOCALBOARD_MINOR }}.${{ env.FOCALBOARD_INCREMENT }}
-
-          build-args: FOCALBOARD_REF=v${{ steps.focalboard.outputs.release }}
+          build-args: FOCALBOARD_REF=${{ steps.focalboard.outputs.release }}
           tags: |
             arm-focalboard:${{ steps.focalboard.outputs.release }}
             arm-focalboard:latest
