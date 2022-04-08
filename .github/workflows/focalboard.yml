@@ -48,6 +48,6 @@ jobs:
           push: ${{ github.event_name != 'pull_request' }}
           build-args: FOCALBOARD_REF=${{ steps.focalboard.outputs.release }}
           tags: |
-            arm-focalboard:${{ steps.focalboard.outputs.release }}
-            arm-focalboard:latest
+            vimarsh244/arm-focalboard:${{ steps.focalboard.outputs.release }}
+            vimarsh244/arm-focalboard:latest
           labels: ${{ steps.docker_meta.outputs.labels }}
