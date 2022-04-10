@@ -61,6 +61,6 @@ jobs:
         with:
           context: ./notion-git/
           file: ./website/Dockerfile
-          platforms: linux/arm64,linux/arm/v7,linux/amd64
+          platforms: linux/arm64,linux/amd64
           push: true
           tags: vimarsh244/website:latest, vimarsh244/website:build-${{ env.timestamp }}
