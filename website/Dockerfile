@@ -8,8 +8,8 @@ RUN mkdir -p /files
 WORKDIR /files
 
 # copy source files
-COPY . /files
-RUN cd web
+COPY ./web /files
+# RUN cd web
 
 # install dependencies
 RUN npm install
