@@ -12,7 +12,7 @@ COPY ./web /files
 # RUN cd web
 
 # install dependencies
-RUN npm install
+RUN npm install --force
 
 # start app
 RUN npm run build
