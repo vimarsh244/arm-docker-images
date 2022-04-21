@@ -3,6 +3,12 @@
 # base image
 FROM node:lts-alpine
 
+#dependency packages
+RUN apk add --no-cache \
+    udev \
+    ttf-freefont \
+    chromium
+
 # create & set working directory
 RUN mkdir -p /files
 WORKDIR /files
