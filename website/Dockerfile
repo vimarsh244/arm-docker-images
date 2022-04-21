@@ -1,10 +1,10 @@
 # Dockerfile
 
 # base image
-FROM node:lts-alpine
+FROM node:lts-bullseye
 
 #dependency packages
-RUN apk add --no-cache \
+RUN sudo apt-install --no-cache \
     udev \
     ttf-freefont \
     chromium
