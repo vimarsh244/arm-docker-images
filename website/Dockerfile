@@ -4,8 +4,7 @@
 FROM node:lts-bullseye
 
 #dependency packages
-RUN apt-get install -y \
-    chromium
+RUN sudo apt install chromium -y
 
 
 # create & set working directory
