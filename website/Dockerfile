@@ -1,7 +1,7 @@
 # Dockerfile
 
 # base image
-FROM node:lts-slim
+FROM node:lts-alpine
 
 #dependency packages
 # RUN sudo apt install chromium -y
