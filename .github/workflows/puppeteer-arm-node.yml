@@ -1,0 +1,65 @@
+name: Docker build arm puppeteer
+
+# most of it is useless code just building my image
+
+on:
+  schedule:
+    - cron: "0 0 * * 0"
+  workflow_dispatch:
+  
+jobs:
+
+  build:
+
+    runs-on: ubuntu-latest
+
+    steps:      
+      - name: Get latest commit hash
+        id: get-latest-commit
+        run: |
+          echo "::set-output name=commit::$(git ls-remote git://github.com/vimarsh244/notion-personal-website.git | head -n1 | awk '{print $1;}')"
+        shell: bash
+
+      - uses: actions/cache@v2
+        id: cache
+        with:
+          path: notion
+          key: ${{ runner.os }}-v1-${{ steps.get-latest-commit.outputs.commit }}-${{ hashFiles('**/lockfiles') }}
+
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v1
+
+      - name: Check Out Repo
+        uses: actions/checkout@v2
+          
+      - name: Check Out Repo vimarsh244/notion-personal-website
+        uses: actions/checkout@v2
+        with:
+          repository: "vimarsh244/notion-personal-website"
+          ref: 'main'
+          path: 'notion-git'
+      
+      - name: Login to docker hub
+        uses: docker/login-action@v1
+        with:
+          username: ${{ secrets.DOCKER_USERNAME }}
+          password: ${{ secrets.DOCKER_PASSWORD }}
+
+      - name: Set up Docker Buildx
+        id: buildx
+        uses: docker/setup-buildx-action@v1
+        with:
+          version: latest
+
+      - name: Set up build timestamp
+        run: echo "timestamp=$(date +%Y%m%d)" >> $GITHUB_ENV
+
+      - name: Build and push container
+        id: docker_build_new_custom
+        uses: docker/build-push-action@v2
+        with:
+          context: ./
+          file: ./puppeteer/Dockerfile
+          platforms: linux/arm64
+          push: true
+          tags: vimarsh244/puppeteer-node:latest, vimarsh244/puppeteer-node:build-${{ env.timestamp }}
