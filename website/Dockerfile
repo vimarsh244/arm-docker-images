@@ -4,7 +4,7 @@
 FROM node:lts-slim
 
 #dependency packages
-RUN sudo apt install chromium -y
+# RUN sudo apt install chromium -y
 
 
 # create & set working directory
