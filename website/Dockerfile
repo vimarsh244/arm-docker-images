@@ -1,7 +1,9 @@
 # Dockerfile
 
 # base image
-FROM node:lts-alpine
+# FROM node:lts-alpine
+
+FROM satantime/puppeteer-node:16-bullseye
 
 #dependency packages
 # RUN sudo apt install chromium -y
@@ -19,6 +21,7 @@ COPY ./web /files
 RUN npm install --force
 
 # start app
-# RUN npm run build
+RUN npm run build
 EXPOSE 3000
-CMD npm run build && npm run start
+# CMD npm run build && npm run start
+CMD npm run start
