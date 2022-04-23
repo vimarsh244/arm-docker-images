@@ -13,7 +13,7 @@ COPY ./web /files
 # RUN cd web
 
 # install sharp for better image optimization
-RUN npm install sharp
+# RUN npm install sharp # doesnt work 
 
 # install dependencies
 RUN npm install --force
