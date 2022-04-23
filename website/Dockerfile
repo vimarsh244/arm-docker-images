@@ -12,6 +12,9 @@ WORKDIR /files
 COPY ./web /files
 # RUN cd web
 
+# install sharp for better image optimization
+RUN npm install sharp
+
 # install dependencies
 RUN npm install --force
 
