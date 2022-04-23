@@ -12,13 +12,12 @@ WORKDIR /files
 COPY ./web /files
 # RUN cd web
 
-RUN npm i puppeteer
-
 # install dependencies
 RUN npm install --force
 
 # start app
 RUN npm run build
+
 EXPOSE 3000
 # CMD npm run build && npm run start
 CMD npm run start
