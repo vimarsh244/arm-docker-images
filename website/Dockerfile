@@ -9,14 +9,14 @@ RUN mkdir -p /files
 WORKDIR /files
 
 # copy source files
-COPY ./web /files
+COPY ./web2 /files
 # RUN cd web
 
 # install sharp for better image optimization
 # RUN npm install sharp # doesnt work 
 
 # install dependencies
-RUN npm install --force
+RUN npm install
 
 # start app
 RUN npm run build
