@@ -11,4 +11,4 @@ COPY ./backend/flask /files
 RUN pip3 install flask pydantic openai langchain gunicorn faiss-cpu
 
 
-CMD [ "python3", "-m" , "flask", "run", "--host=0.0.0.0"]
+CMD [ "python3", "-m" , "flask", "--app main run", "--host=0.0.0.0"]
