@@ -1,4 +1,4 @@
-name: Docker build personal website image
+name: Docker build financegpt image
 
 on:
   schedule:
