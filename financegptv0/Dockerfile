@@ -8,7 +8,7 @@ WORKDIR /files
 # copy source files
 COPY ./backend/flask /files
 
-RUN pip3 install flask pydantic openai langchain gunicorn faiss-cpu
+RUN pip3 install flask pydantic openai langchain gunicorn faiss-cpu python-dotenv 
 
 
 CMD [ "python3 main.py"]
