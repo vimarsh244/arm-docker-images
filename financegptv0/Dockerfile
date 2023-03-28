@@ -12,7 +12,7 @@ WORKDIR /files
 
 RUN pip install -r requirements.txt
 
-ENTRYPOINT [ "python" ]
+# ENTRYPOINT [ "python" ]
 
 
-CMD [ "main.py --host=0.0.0.0"]
+CMD [ "python main.py --host=0.0.0.0"]
