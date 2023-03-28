@@ -15,4 +15,4 @@ RUN pip install -r requirements.txt
 # ENTRYPOINT [ "python" ]
 
 
-CMD [ "python main.py --host=0.0.0.0"]
+CMD [ "flask run --host=0.0.0.0"]
