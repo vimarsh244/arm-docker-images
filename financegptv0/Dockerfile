@@ -15,4 +15,4 @@ RUN pip install -r requirements.txt
 # ENTRYPOINT [ "python" ]
 
 
-CMD [ "flask --app main run --host=0.0.0.0"]
+CMD [ "gunicorn -b 0.0.0.0 main:app"]
