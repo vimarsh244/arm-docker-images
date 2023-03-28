@@ -1,6 +1,6 @@
 # syntax=docker/dockerfile:1
 
-FROM python:3.9-slim-bullseye
+FROM python:3.9
 
 RUN mkdir -p /files
 
@@ -10,7 +10,9 @@ COPY ./backend/flask /files
 WORKDIR /files
 
 
-RUN pip3 install flask pydantic openai langchain gunicorn faiss-cpu python-dotenv 
+RUN pip install -r requirements.txt
+
+ENTRYPOINT [ "python" ]
 
 
-CMD [ "python main.py"]
+CMD [ "main.py"]
