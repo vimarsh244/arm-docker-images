@@ -30,14 +30,10 @@ jobs:
       - name: Build and push Docker image
         uses: docker/build-push-action@v4
         with:
-          # Sets the build context to the repository root
-          context: .
-          # Specifies the exact path to your Dockerfile
+          context: ./mattermost/ee/
           file: ./mattermost/ee/Dockerfile
-          # Defines the target platforms for the build
           platforms: linux/amd64,linux/arm64
-          # Pushes the image only on merges/pushes to main, not on PRs
-          push: ${{ github.event_name != 'pull_request' }}
+          push: true
           # Tags the image with your Docker Hub username and repo name
           tags: |
             ${{ secrets.DOCKER_USERNAME }}/mattermost-enterprise:latest
