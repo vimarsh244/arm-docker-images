@@ -3,6 +3,7 @@ name: Build and Push Mattermost Docker Image to Docker Hub
 on:
   schedule:
     - cron: "0 0 1 * *"
+  push
   workflow_dispatch:
 
 jobs:
@@ -32,7 +33,7 @@ jobs:
         with:
           context: ./mattermost/ee/
           file: ./mattermost/ee/Dockerfile
-          platforms: linux/amd64,linux/arm64
+          platforms: linux/arm64
           push: true
           # Tags the image with your Docker Hub username and repo name
           tags: |

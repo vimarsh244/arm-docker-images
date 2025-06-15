@@ -1,7 +1,7 @@
-# Multi-stage build for Mattermost Enterprise Edition on ARM64
-# Based on official Mattermost Dockerfile with ARM64 optimizations
+# Multi-stage build for Mattermost Enterprise Edition on ARM64 with Yarn
+# Addresses peer dependency issues and uses Yarn for package management
 
-# First stage - Build environment with document processing dependencies
+# First stage - Build environment
 FROM ubuntu:noble-20250415.1 AS builder
 
 # Setting bash as shell with pipefail option
@@ -27,8 +27,6 @@ RUN apt-get update \
     wget \
     git \
     build-essential \
-    nodejs \
-    npm \
     python3 \
     python3-pip \
     media-types \
@@ -39,6 +37,13 @@ RUN apt-get update \
     tidy \
     tzdata \
     && rm -rf /var/lib/apt/lists/*
+
+# Install Node.js for ARM64
+RUN curl -fsSL https://deb.nodesource.com/setup_18.x | bash - \
+    && apt-get install -y nodejs
+
+# Install Yarn globally
+RUN npm install -g yarn
 
 # Install Go for ARM64
 RUN wget -O go.tar.gz "https://golang.org/dl/go1.21.5.linux-arm64.tar.gz" \
@@ -57,10 +62,23 @@ RUN groupadd --gid ${PGID} mattermost \
 WORKDIR /build
 RUN git clone --depth 1 --branch master https://github.com/mattermost/mattermost.git
 
-# Build Mattermost webapp
+# Build Mattermost webapp with Yarn and peer dependency handling
 WORKDIR /build/mattermost/webapp
-RUN npm install --production=false \
-    && npm run build
+
+# Create .yarnrc.yml for Yarn modern or use legacy approach
+RUN echo 'nodeLinker: node-modules' > .yarnrc.yml
+
+# Clear any existing node_modules and package-lock files
+RUN rm -rf node_modules package-lock.json yarn.lock || true
+
+# Install dependencies with Yarn, handling peer dependency conflicts
+# RUN yarn cache clean \
+#     && yarn install --ignore-engines \
+#     && yarn build
+
+# Alternative approach with legacy peer deps handling if above fails
+RUN yarn install --legacy-peer-deps || yarn install --ignore-engines \
+    && yarn build
 
 # Build Mattermost server for ARM64
 WORKDIR /build/mattermost/server
@@ -106,7 +124,7 @@ COPY --from=builder /usr/bin/unrtf /usr/bin/unrtf
 COPY --from=builder /usr/bin/tidy /usr/bin/tidy
 COPY --from=builder /usr/share/wv /usr/share/wv
 
-# Copy necessary libraries for document processing
+# Copy necessary libraries for document processing (ARM64 paths)
 COPY --from=builder /usr/lib/aarch64-linux-gnu/libpoppler.so* /usr/lib/
 COPY --from=builder /usr/lib/aarch64-linux-gnu/libfreetype.so* /usr/lib/
 COPY --from=builder /usr/lib/aarch64-linux-gnu/libpng16.so* /usr/lib/
