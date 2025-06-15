@@ -3,7 +3,6 @@ name: Build and Push Mattermost Docker Image to Docker Hub
 on:
   schedule:
     - cron: "0 0 1 * *"
-  push
   workflow_dispatch:
 
 jobs:
