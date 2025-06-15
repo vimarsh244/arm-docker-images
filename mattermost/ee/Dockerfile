@@ -1,84 +1,140 @@
-#
-# STAGE 1: Builder - Mimics the official Mattermost build environment
-#
-FROM --platform=$BUILDPLATFORM golang:1.24-bookworm AS builder
+# Multi-stage build for Mattermost Enterprise Edition on ARM64
+# Based on official Mattermost Dockerfile with ARM64 optimizations
 
-# Arguments for version and architecture
-ARG MATTERMOST_VERSION=9.8.0
-ARG TARGETARCH
+# First stage - Build environment with document processing dependencies
+FROM ubuntu:noble-20250415.1 AS builder
 
-# Install the correct build dependencies for a Debian-based system
-RUN apt-get update && apt-get install -y \
-    build-essential \
+# Setting bash as shell with pipefail option
+SHELL ["/bin/bash", "-o", "pipefail", "-c"]
+
+# Build Arguments
+ARG PUID=2000
+ARG PGID=2000
+ARG MATTERMOST_VERSION=latest
+ARG BUILD_ENTERPRISE=1
+ARG TARGETARCH=arm64
+
+# Environment variables for cross-compilation
+ENV GOOS=linux
+ENV GOARCH=arm64
+ENV CGO_ENABLED=0
+
+# Install system dependencies and build tools
+RUN apt-get update \
+    && DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends \
+    ca-certificates \
+    curl \
+    wget \
     git \
-    make
+    build-essential \
+    nodejs \
+    npm \
+    python3 \
+    python3-pip \
+    media-types \
+    mailcap \
+    unrtf \
+    wv \
+    poppler-utils \
+    tidy \
+    tzdata \
+    && rm -rf /var/lib/apt/lists/*
 
-# Set the working directory for the source code
-WORKDIR /src
+# Install Go for ARM64
+RUN wget -O go.tar.gz "https://golang.org/dl/go1.21.5.linux-arm64.tar.gz" \
+    && tar -C /usr/local -xzf go.tar.gz \
+    && rm go.tar.gz
 
-# Clone the correct Mattermost server repository
-# Using --depth 1 for a faster clone
-RUN git clone --depth 1 --branch v${MATTERMOST_VERSION} https://github.com/mattermost/mattermost-server.git .
+ENV PATH="/usr/local/go/bin:${PATH}"
+ENV GOROOT="/usr/local/go"
 
-# IMPORTANT: Change to the /server subdirectory where the main Makefile resides
-WORKDIR /src/server
+# Create mattermost user and directories
+RUN groupadd --gid ${PGID} mattermost \
+    && useradd --uid ${PUID} --gid ${PGID} --comment "" --home-dir /mattermost mattermost \
+    && mkdir -p /mattermost/data /mattermost/plugins /mattermost/client/plugins /build
 
-# Build the enterprise edition for the target architecture.
-# This is the corrected command, run from the correct directory.
-RUN export MM_EDITION=enterprise && GOOS=linux GOARCH=${TARGETARCH} make build-server
+# Clone Mattermost source code
+WORKDIR /build
+RUN git clone --depth 1 --branch master https://github.com/mattermost/mattermost.git
 
-# Also build mmctl, which is needed for the healthcheck
-RUN GOOS=linux GOARCH=${TARGETARCH} make build-mmctl
+# Build Mattermost webapp
+WORKDIR /build/mattermost/webapp
+RUN npm install --production=false \
+    && npm run build
 
-# Create a non-root user config file for the distroless image
-ARG PUID=2000
-ARG PGID=2000
-RUN echo "mattermost:x:${PUID}:${PGID}:Mattermost:/mattermost:/bin/false" > /passwd
+# Build Mattermost server for ARM64
+WORKDIR /build/mattermost/server
+RUN make setup-go-work \
+    && make build-linux \
+    BUILD_NUMBER="docker-arm64" \
+    BUILD_ENTERPRISE=${BUILD_ENTERPRISE} \
+    GOARCH=arm64 \
+    GOOS=linux
 
+# Create distribution package
+RUN make package \
+    BUILD_NUMBER="docker-arm64" \
+    BUILD_ENTERPRISE=${BUILD_ENTERPRISE} \
+    GOARCH=arm64 \
+    GOOS=linux
 
-#
-# STAGE 2: Final Image - Minimal and secure using distroless
-#
-FROM gcr.io/distroless/base-debian12
+# Extract built package
+RUN if [ "${BUILD_ENTERPRISE}" = "1" ]; then \
+        tar -xzf dist/mattermost-*-linux-arm64.tar.gz -C /; \
+    else \
+        tar -xzf dist/mattermost-team-*-linux-arm64.tar.gz -C /; \
+    fi
 
-ARG PUID=2000
-ARG PGID=2000
+# Set proper ownership
+RUN chown -R mattermost:mattermost /mattermost
 
-# Set the working directory
-WORKDIR /mattermost
+# Final stage using distroless for minimal attack surface
+FROM gcr.io/distroless/base-debian12:latest
 
-# Create necessary directories and copy the application binary from the builder stage
-# The output path of the build is /src/bin/
-COPY --from=builder --chown=${PUID}:${PGID} /src/bin/mattermost /mattermost/bin/mattermost
-COPY --from=builder --chown=${PUID}:${PGID} /src/bin/mmctl /mattermost/bin/mmctl
-
-# Copy the default configuration file
-COPY --from=builder --chown=${PUID}:${PGID} /src/server/config/config.json /mattermost/config/config.json
-
-# Copy the user definition we created in the builder stage
-COPY --from=builder /passwd /etc/passwd
-
-# It's good practice to create these directories so permissions are set correctly
-# We create empty directories in the builder and copy them over
-RUN mkdir -p /mattermost_dirs/{data,logs,plugins,client/plugins}
-COPY --from=builder --chown=${PUID}:${PGID} /mattermost_dirs/ /mattermost/
-
-# Set environment variables
+# Environment variables
 ENV PATH="/mattermost/bin:${PATH}"
-ENV MM_CONFIG="/mattermost/config/config.json"
+ENV MM_SERVICESETTINGS_ENABLELOCALMODE="true"
 
-# Run as the non-privileged user
+# Copy metadata files needed by runtime
+COPY --from=builder /etc/mime.types /etc/
+
+# Copy document processing utilities and support files
+COPY --from=builder /usr/bin/pdftotext /usr/bin/pdftotext
+COPY --from=builder /usr/bin/wvText /usr/bin/wvText
+COPY --from=builder /usr/bin/wvWare /usr/bin/wvWare
+COPY --from=builder /usr/bin/unrtf /usr/bin/unrtf
+COPY --from=builder /usr/bin/tidy /usr/bin/tidy
+COPY --from=builder /usr/share/wv /usr/share/wv
+
+# Copy necessary libraries for document processing
+COPY --from=builder /usr/lib/aarch64-linux-gnu/libpoppler.so* /usr/lib/
+COPY --from=builder /usr/lib/aarch64-linux-gnu/libfreetype.so* /usr/lib/
+COPY --from=builder /usr/lib/aarch64-linux-gnu/libpng16.so* /usr/lib/
+COPY --from=builder /usr/lib/aarch64-linux-gnu/libwv.so* /usr/lib/
+COPY --from=builder /usr/lib/aarch64-linux-gnu/libtidy.so* /usr/lib/
+COPY --from=builder /usr/lib/aarch64-linux-gnu/libfontconfig.so* /usr/lib/
+
+# Copy built Mattermost application
+COPY --from=builder --chown=2000:2000 /mattermost /mattermost
+
+# Copy passwd file for user resolution
+COPY --from=builder /etc/passwd /etc/passwd
+
+# Switch to non-root user
 USER mattermost
 
-# Healthcheck to make sure the container is ready
-HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \
-  CMD ["/mattermost/bin/mmctl", "system", "status", "--local"]
+# Health check using mmctl for distroless compatibility
+HEALTHCHECK --interval=30s --timeout=10s \
+    CMD ["/mattermost/bin/mmctl", "system", "status", "--local"]
 
-# Expose the primary port for CapRover
-EXPOSE 8065
+# Set working directory
+WORKDIR /mattermost
 
-# Declare volumes that CapRover will manage
+# Default command
+CMD ["/mattermost/bin/mattermost"]
+
+# Expose ports
+EXPOSE 8065 8067 8074 8075
+
+# Declare volumes
 VOLUME ["/mattermost/data", "/mattermost/logs", "/mattermost/config", "/mattermost/plugins", "/mattermost/client/plugins"]
-
-# Entrypoint to start the server
-ENTRYPOINT ["/mattermost/bin/mattermost"]
