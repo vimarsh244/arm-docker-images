@@ -1,58 +1,84 @@
-# Dockerfile for Mattermost Enterprise Edition
+#
+# STAGE 1: Builder - Mimics the official Mattermost build environment
+#
+FROM --platform=$BUILDPLATFORM golang:1.24-bookworm AS builder
 
-# Builder Stage
-FROM --platform=$BUILDPLATFORM golang:1.21-alpine AS builder
-
+# Arguments for version and architecture
 ARG MATTERMOST_VERSION=9.8.0
 ARG TARGETARCH
 
-# Install build dependencies
-RUN apk add --no-cache \
-    build-base \
+# Install the correct build dependencies for a Debian-based system
+RUN apt-get update && apt-get install -y \
+    build-essential \
     git \
     make
 
-# Clone the Mattermost repository
-RUN git clone --depth 1 --branch v${MATTERMOST_VERSION} https://github.com/mattermost/mattermost-server.git /src
-
-# Build Mattermost
+# Set the working directory for the source code
 WORKDIR /src
-# ---- THIS IS THE CORRECTED LINE ----
-# The new build system uses the MM_EDITION variable and the 'build-server' target.
+
+# Clone the correct Mattermost server repository
+# Using --depth 1 for a faster clone
+RUN git clone --depth 1 --branch v${MATTERMOST_VERSION} https://github.com/mattermost/mattermost-server.git .
+
+# IMPORTANT: Change to the /server subdirectory where the main Makefile resides
+WORKDIR /src/server
+
+# Build the enterprise edition for the target architecture.
+# This is the corrected command, run from the correct directory.
 RUN export MM_EDITION=enterprise && GOOS=linux GOARCH=${TARGETARCH} make build-server
 
-# Final Stage
-FROM alpine:3.18
+# Also build mmctl, which is needed for the healthcheck
+RUN GOOS=linux GOARCH=${TARGETARCH} make build-mmctl
 
-ARG MATTERMOST_VERSION
+# Create a non-root user config file for the distroless image
+ARG PUID=2000
+ARG PGID=2000
+RUN echo "mattermost:x:${PUID}:${PGID}:Mattermost:/mattermost:/bin/false" > /passwd
 
-# Set labels
-LABEL org.opencontainers.image.title="Mattermost Enterprise Edition" \
-      org.opencontainers.image.description="Mattermost is an open source platform for secure collaboration across the entire software development lifecycle." \
-      org.opencontainers.image.version=$MATTERMOST_VERSION \
-      org.opencontainers.image.authors="Mattermost, Inc." \
-      org.opencontainers.image.url="https://mattermost.com/" \
-      org.opencontainers.image.documentation="https://docs.mattermost.com/" \
-      org.opencontainers.image.source="https://github.com/mattermost/mattermost-server"
 
-# Create a non-root user
-RUN addgroup -g 2000 mattermost && \
-    adduser -u 2000 -G mattermost -D mattermost
+#
+# STAGE 2: Final Image - Minimal and secure using distroless
+#
+FROM gcr.io/distroless/base-debian12
 
-# Copy the compiled binary from the builder stage
-# The output binary is now in /src/bin/mattermost
-COPY --from=builder /src/bin/mattermost /usr/local/bin/mattermost
+ARG PUID=2000
+ARG PGID=2000
 
-# Set up the Mattermost directory structure
-RUN mkdir -p /mattermost/data /mattermost/plugins /mattermost/client/plugins && \
-    chown -R mattermost:mattermost /mattermost
-
-# Set the user and working directory
-USER mattermost
+# Set the working directory
 WORKDIR /mattermost
 
-# Expose the Mattermost port
+# Create necessary directories and copy the application binary from the builder stage
+# The output path of the build is /src/bin/
+COPY --from=builder --chown=${PUID}:${PGID} /src/bin/mattermost /mattermost/bin/mattermost
+COPY --from=builder --chown=${PUID}:${PGID} /src/bin/mmctl /mattermost/bin/mmctl
+
+# Copy the default configuration file
+COPY --from=builder --chown=${PUID}:${PGID} /src/server/config/config.json /mattermost/config/config.json
+
+# Copy the user definition we created in the builder stage
+COPY --from=builder /passwd /etc/passwd
+
+# It's good practice to create these directories so permissions are set correctly
+# We create empty directories in the builder and copy them over
+RUN mkdir -p /mattermost_dirs/{data,logs,plugins,client/plugins}
+COPY --from=builder --chown=${PUID}:${PGID} /mattermost_dirs/ /mattermost/
+
+# Set environment variables
+ENV PATH="/mattermost/bin:${PATH}"
+ENV MM_CONFIG="/mattermost/config/config.json"
+
+# Run as the non-privileged user
+USER mattermost
+
+# Healthcheck to make sure the container is ready
+HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \
+  CMD ["/mattermost/bin/mmctl", "system", "status", "--local"]
+
+# Expose the primary port for CapRover
 EXPOSE 8065
 
-# Set the entrypoint
-ENTRYPOINT ["/usr/local/bin/mattermost"]
+# Declare volumes that CapRover will manage
+VOLUME ["/mattermost/data", "/mattermost/logs", "/mattermost/config", "/mattermost/plugins", "/mattermost/client/plugins"]
+
+# Entrypoint to start the server
+ENTRYPOINT ["/mattermost/bin/mattermost"]
