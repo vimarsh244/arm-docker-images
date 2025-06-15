@@ -17,7 +17,9 @@ RUN git clone --depth 1 --branch v${MATTERMOST_VERSION} https://github.com/matte
 
 # Build Mattermost
 WORKDIR /src
-RUN GOOS=linux GOARCH=${TARGETARCH} make build-enterprise
+# ---- THIS IS THE CORRECTED LINE ----
+# The new build system uses the MM_EDITION variable and the 'build-server' target.
+RUN export MM_EDITION=enterprise && GOOS=linux GOARCH=${TARGETARCH} make build-server
 
 # Final Stage
 FROM alpine:3.18
@@ -38,6 +40,7 @@ RUN addgroup -g 2000 mattermost && \
     adduser -u 2000 -G mattermost -D mattermost
 
 # Copy the compiled binary from the builder stage
+# The output binary is now in /src/bin/mattermost
 COPY --from=builder /src/bin/mattermost /usr/local/bin/mattermost
 
 # Set up the Mattermost directory structure
