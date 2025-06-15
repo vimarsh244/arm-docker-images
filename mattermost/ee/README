@@ -1,0 +1,29 @@
+
+captain-definitions file
+
+```
+{
+  "schemaVersion": 2,
+  "imageName": "your-dockerhub-username/mattermost-enterprise:latest",
+  "ports": [8065],
+  "volumes": [
+    {
+      "hostPath": "/var/lib/docker/volumes/captain--mattermost-app-data/_data",
+      "containerPath": "/mattermost/data"
+    },
+    {
+      "hostPath": "/var/lib/docker/volumes/captain--mattermost-app-plugins/_data",
+      "containerPath": "/mattermost/plugins"
+    },
+    {
+      "hostPath": "/var/lib/docker/volumes/captain--mattermost-app-client-plugins/_data",
+      "containerPath": "/mattermost/client/plugins"
+    }
+  ],
+  "environment": {
+    "MM_SQLSETTINGS_DRIVERNAME": "postgres",
+    "MM_SQLSETTINGS_DATASOURCE": "postgres://srv-captain--POSTGRES-APP-NAME:DATABASE_PASSWORD@srv-captain--POSTGRES-APP-NAME:5432/DATABASE_NAME?sslmode=disable&connect_timeout=10",
+    "MM_SERVICESETTINGS_SITEURL": "https://mattermost.your-caprover-domain.com"
+  }
+}
+```
